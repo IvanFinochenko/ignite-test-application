@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+    id 'com.gradle.build-scan' version '1.12.1'
+}
+
+group 'com.github.pakhomovalexander'
+version '1.0-SNAPSHOT'
+
+repositories {
+    jcenter()
+}
+
+buildScan {
+    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+    licenseAgree = 'yes'
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
