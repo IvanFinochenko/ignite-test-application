@@ -6,7 +6,6 @@ import org.apache.ignite.IgniteException;
 import org.apache.ignite.Ignition;
 
 public class HelloWorld {
-    private static final String IGNITE_HOME = "~/Work/ignite/apache-ignite-2.4.0-src";
     public static void main(String[] args) throws IgniteException {
         try (Ignite ignite = Ignition.start("examples/config/example-ignite.xml")) {
             // Put values in cache.
