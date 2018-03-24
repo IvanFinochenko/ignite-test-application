@@ -14,7 +14,7 @@ public class ConnectionManegerTest {
         assertNotNull("connection should be initialized", connectionManager);
 
         ConnectionManager secondConnectionManager = ConnectionManager.getInstance();
-        assertTrue("connection has exactly single instanse",
+        assertTrue("connection has exactly single instance",
                 connectionManager == secondConnectionManager);
     }
 
