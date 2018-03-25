@@ -56,8 +56,6 @@ public class IgniteExamples {
             for (int i = 0; i < cnt; i++) {
                 System.out.println("Got " + i + '=' + cache.get(i));
             }
-
-
         }
     }
 }

@@ -18,7 +18,7 @@ public class JDBConnection {
                     " place VARCHAR," +
                     " name VARCHAR," +
                     " time_key DATE) " +
-                    " WITH \"backups=1\"");
+                    " WITH \"template=replicated, backups=1\"");
 
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Call (" +
                     " id INT PRIMARY KEY," +
@@ -26,24 +26,24 @@ public class JDBConnection {
                     " subs_to LONG," +
                     " dur INT," +
                     " start_time DATE) " +
-                    " WITH \"backups=1\"");
+                    " WITH \"template=partitioned,backups=1\"");
 
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS CarWash (" +
                     " subs_key LONG PRIMARY KEY," +
                     " name VARCHAR," +
                     " place VARCHAR," +
                     " cunc_ind INT) " +
-                    " WITH \"backups=1\"");
+                    " WITH \"template=replicated, backups=1\"");
 
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS CarWashUser (" +
                     " subs_key LONG PRIMARY KEY," +
                     " cunc_ind INT," +
                     " name VARCHAR)" +
-                    " WITH \"backups=1\"");
+                    " WITH \"template=replicated, backups=1\"");
 
-            stmt.executeUpdate("CREATE INDEX idx_subscriber_time_key ON Subscriber (time_key)");
-            stmt.executeUpdate("CREATE INDEX idx_call_subscribers ON Call (subs_from, subs_to)");
-            stmt.executeUpdate("CREATE INDEX idx_call_dur ON Call (dur)");
+            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_subscriber_time_key ON Subscriber (time_key)");
+            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_call_subscribers ON Call (subs_from, subs_to)");
+            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_call_dur ON Call (dur)");
         }
     }
 
