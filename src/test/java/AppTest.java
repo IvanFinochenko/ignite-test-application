@@ -1,12 +1,14 @@
 import org.junit.Test;
 
-import static org.junit.Assert.assertNotNull;
+import java.sql.SQLException;
 
 public class AppTest {
     @Test
-    public void testAppHasAGreeting() {
-        App classUnderTest = new App();
-        assertNotNull("app should have a greeting",
-                classUnderTest.getGreeting());
+    public void testApp() throws SQLException {
+        String[] args = new String[1];
+        args[0] = "2018-03-24";
+
+        //It works
+        App.main(args);
     }
 }

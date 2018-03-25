@@ -28,5 +28,9 @@ dependencies {
     testCompile group: 'com.h2database', name: 'h2', version: '1.3.148'
 }
 
+test {
+    environment "IGNITE_HOME", "/home/alex/Work/ignite/apache-ignite-2.4.0-src/"
+}
+
 mainClassName = 'App'
 
