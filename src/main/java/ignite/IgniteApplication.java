@@ -18,40 +18,65 @@ import java.util.List;
 public class IgniteApplication {
     private Parameters parameters;
     private SourceService sourceService;
-    private JDBConnection jdbs = new JDBConnection();
+    private JDBConnection jdbc;
+
+    private IgniteCache subscriberCache;
+    private IgniteCache callCache;
+    private IgniteCache carWashCache;
+    private IgniteCache carWashUsersCache;
+
+    IgniteCache getSubscriberCache() {
+        return subscriberCache;
+    }
+
+    IgniteCache getCallCache() {
+        return callCache;
+    }
+
+    IgniteCache getCarWashCache() {
+        return carWashCache;
+    }
+
+    IgniteCache getCarWashUsersCache() {
+        return carWashUsersCache;
+    }
 
     public IgniteApplication(Parameters parameters, SourceService sourceService) throws SQLException {
         this.parameters = parameters;
         this.sourceService = sourceService;
+        jdbc = new JDBConnection();
     }
 
     public void start() throws SQLException {
         //Ignition.setClientMode(true);
 
         try (Ignite ignite = Ignition.start("examples/config/example-ignite.xml")) {
-            jdbs.createTablesWithIndexes();
+            jdbc.createTablesWithIndexes();
 
             System.out.println();
             System.out.println(">>> Ignite application started.");
 
-            // Getting a reference to Subscriber, Call, CarWash and CarWashUsers caches created by JBCConnection
-            IgniteCache subscriberCache = ignite.cache("SQL_PUBLIC_SUBSCRIBER");
-            IgniteCache callCache = ignite.cache("SQL_PUBLIC_CALL");
-            IgniteCache carWashCache = ignite.cache("SQL_PUBLIC_CARWASH");
-            IgniteCache carWashUsersCache = ignite.cache("SQL_PUBLIC_CARWASHUSER");
+            setupCashes(ignite);
 
+            insertData();
 
-            insertData(subscriberCache, callCache, carWashCache);
+            sampleData();
 
-            sampleData(subscriberCache, callCache, carWashCache);
+            insertCarWashUser();
 
-            insertCarWashUser(carWashUsersCache);
-
-            printResult(carWashUsersCache);
+            printResult();
         }
     }
 
-    private void insertData(IgniteCache subscriberCache, IgniteCache callCache, IgniteCache carWashCache) {
+    void setupCashes(Ignite ignite) {
+        // Getting a reference to Subscriber, Call, CarWash and CarWashUsers caches created by JBCConnection
+        subscriberCache = ignite.cache("SQL_PUBLIC_SUBSCRIBER");
+        callCache = ignite.cache("SQL_PUBLIC_CALL");
+        carWashCache = ignite.cache("SQL_PUBLIC_CARWASH");
+        carWashUsersCache = ignite.cache("SQL_PUBLIC_CARWASHUSER");
+    }
+
+    void insertData() {
         //--------------------INSERT TO SUBSCRIBER--------------------
         subscriberCache.clear();
 
@@ -104,7 +129,7 @@ public class IgniteApplication {
         System.out.println(">>> Inserted entries into CarWash:" + carWashCache.size(CachePeekMode.PRIMARY));
     }
 
-    private void sampleData(IgniteCache subscriberCache, IgniteCache callCache, IgniteCache carWashCach) {
+    void sampleData() {
         SqlFieldsQuery querySubscriber = new SqlFieldsQuery("SELECT * " +
                 " FROM SUBSCRIBER LIMIT 10");
 
@@ -124,7 +149,7 @@ public class IgniteApplication {
         SqlFieldsQuery queryCarWash = new SqlFieldsQuery("SELECT * " +
                 " FROM CARWASH LIMIT 10");
 
-        FieldsQueryCursor cursorCarWash = carWashCach.query(queryCarWash);
+        FieldsQueryCursor cursorCarWash = carWashCache.query(queryCarWash);
 
         System.out.println("CARWASH:");
         cursorCarWash.forEach(System.out::println);
@@ -133,8 +158,8 @@ public class IgniteApplication {
     /**
      * Main method for calculate CarWashUsers
      */
-    private void insertCarWashUser(IgniteCache carWashUsersCache) throws SQLException {
-        List<CarWashUser> users = jdbs.getCarWashUsers(parameters);
+    void insertCarWashUser() throws SQLException {
+        List<CarWashUser> users = jdbc.getCarWashUsers(parameters);
 
         SqlFieldsQuery queryInsert = new SqlFieldsQuery("INSERT INTO CARWASHUSER (" +
                 "subs_key, cunc_ind, name) VALUES (?, ?, ?)");
@@ -148,7 +173,7 @@ public class IgniteApplication {
         System.out.println(">>> Inserted entries into CarWashUser:" + carWashUsersCache.size(CachePeekMode.PRIMARY));
     }
 
-    private void printResult(IgniteCache carWashUsersCache) {
+    void printResult() {
         SqlFieldsQuery query = new SqlFieldsQuery("SELECT * " +
                 " FROM CARWASHUSER LIMIT 10");
 

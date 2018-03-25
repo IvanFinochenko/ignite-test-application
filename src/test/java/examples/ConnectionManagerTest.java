@@ -22,8 +22,8 @@ public class ConnectionManagerTest {
     public void tablesTest() throws ClassNotFoundException, SQLException {
         ConnectionManager connectionManager = ConnectionManager.getInstance();
 
-        //connectionManager.createTables();
-        //connectionManager.insertData();
+        connectionManager.createTables();
+        connectionManager.insertData();
         connectionManager.execSampleQuery();
     }
 }
