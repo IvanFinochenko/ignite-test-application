@@ -19,10 +19,13 @@ public class SourceServiceExampleImpl implements SourceService {
         List<Call> list =  new ArrayList<>(Arrays.asList(
                 new Call(88002553535L, 88002553534L, 110, dt),
                 new Call(89202550008L, 88002550004L, 120, dt),
-                new Call(89202550005L, 89202550000L, 60, dt.plusDays(1)),
-                new Call(89202550005L, 88002550001L, 59, dt.plusDays(10)),
-                new Call(89202550007L, 88002550003L, 12, dt.plusDays(20)),
-                new Call(89202550009L, 88002550005L, 130, dt.minusDays(1)),
+                new Call(89202550005L, 88002550004L, 60, dt.plusDays(1)),
+                new Call(89202550005L, 88002550004L, 59, dt.plusDays(10)),
+                new Call(89202550007L, 88002550000L, 12, dt.plusDays(20)),
+                new Call(89202550007L, 88002550004L, 130, dt.minusDays(1)),
+                new Call(89202550007L, 88002550000L, 130, dt.minusDays(1)),
+                new Call(89202550007L, 88002550004L, 130, dt.minusDays(1)),
+                new Call(89202550007L, 88002550000L, 130, dt.minusDays(1)),
                 new Call(89202550005L, 88002550002L, 90, dt.minusDays(10))
         ));
 
@@ -55,15 +58,15 @@ public class SourceServiceExampleImpl implements SourceService {
 
         return new ArrayList<>(Arrays.asList(
                 new CarWash(88002553534L, "Bumerang",
-                        "1, Moscow District, Voronezh, Russia", 0),
+                        "Moscow District, Voronezh, Russia", 0),
                 new CarWash(88002550004L, "VimpelcomWash 1",
-                        "22, Moscow District, Voronezh, Russia", 1),
+                        "Moscow District, Voronezh, Russia", 1),
                 new CarWash(89202550000L, "VimpelcomWash 2",
-                        "23, Moscow District, Voronezh, Russia", 1),
+                        "Moscow District, Voronezh, Russia", 1),
                 new CarWash(88002550003L, "VimpelcomWash 3",
-                        "24, Moscow District, Voronezh, Russia", 1),
+                        "Moscow District, Voronezh, Russia", 1),
                 new CarWash(88002550002L, "Washik",
-                        "25, Moscow District, Voronezh, Russia", 0)
+                        "Moscow District, Voronezh, Russia", 0)
 
         ));
     }
