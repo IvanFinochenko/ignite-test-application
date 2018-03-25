@@ -1,9 +1,15 @@
-public class App {
-    String getGreeting() {
-        return "Hello world. (v2)";
-    }
+import ignite.IgniteApplication;
+import rdbms.SourceService;
+import rdbms.SourceServiceExampleImpl;
+import system.Parameters;
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+import java.sql.SQLException;
+
+public class App {
+    public static void main(String[] args) throws SQLException {
+        Parameters parameters = Parameters.getInstance(args);
+        SourceService sourceService = new SourceServiceExampleImpl();
+
+        new IgniteApplication(parameters, sourceService).start();
     }
 }

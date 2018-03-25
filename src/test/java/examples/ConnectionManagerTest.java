@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class ConnectionManegerTest {
+public class ConnectionManagerTest {
     @Test
     public void connectionSingletonPatternWorks() throws ClassNotFoundException {
         ConnectionManager connectionManager = ConnectionManager.getInstance();

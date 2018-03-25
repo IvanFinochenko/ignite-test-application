@@ -1,3 +1,5 @@
+package examples;
+
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.Ignition;
 

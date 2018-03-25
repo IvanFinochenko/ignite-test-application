@@ -44,7 +44,7 @@ public class SourceServiceExampleImpl implements SourceService {
                         "21, Moscow District, Voronezh, Russia", dateMinus2Y.plusMonths(5)),
                 new Subscriber(89202550009L, "Someboby elsovich 2",
                         "21, Moscow District, Voronezh, Russia", dateMinus2Y),
-                new Subscriber(89202550005L, "Someboby elsovich 3",
+                new Subscriber(89202550011L, "Someboby elsovich 3",
                         "21, Moscow District, Voronezh, Russia", dateMinus2Y.plusYears(2))
 
         ));

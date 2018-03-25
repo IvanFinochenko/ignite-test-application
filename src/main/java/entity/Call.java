@@ -9,6 +9,11 @@ import java.time.LocalDateTime;
  */
 public class Call {
     /**
+     * Count do primary key in table
+     */
+    public static int INSTANCE_COUNT;
+
+    /**
      * Who called.
      */
     @QuerySqlField(index = true)
