@@ -1,6 +1,5 @@
 package examples;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.XPath;
 import org.apache.ignite.*;
 import org.apache.ignite.cluster.ClusterGroup;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -10,8 +9,8 @@ import java.util.Collection;
 
 public class IgniteExamples {
     public static void main(String[] args) {
-      runComputingExample();
-      runDataGridExample();
+        runComputingExample();
+        runDataGridExample();
     }
 
     private static void runComputingExample() {
