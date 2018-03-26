@@ -3,27 +3,33 @@ package rdbms;
 import entity.Call;
 import entity.CarWash;
 import entity.Subscriber;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class SourceServiceTest {
-    private SourceService sourceService = new SourceServiceExampleImpl();
+public class SourceServiceExampleTest {
+    SourceService sourceService;
+
+    @Before
+    public void setup() throws SQLException, ClassNotFoundException {
+        sourceService = new SourceServiceExampleImpl();
+    }
 
     @Test
     public void testCalls() {
         LocalDateTime dt = LocalDateTime.now();
 
-        ArrayList<Call> calls = (ArrayList<Call>) sourceService.getCalls(dt.minusDays(10), dt);
+        List<Call> calls = sourceService.getCalls(dt.minusDays(10), dt);
 
         assertNotNull("calls shouldn't be null", calls);
         assertFalse("calls shouldn't be empty with correct date", calls.isEmpty());
 
-        calls = (ArrayList<Call>) sourceService.getCalls(dt.minusYears(100), dt.minusYears(99));
+        calls = sourceService.getCalls(dt.minusYears(100), dt.minusYears(99));
         assertTrue("calls should be empty with incorrect date", calls.isEmpty());
     }
 
