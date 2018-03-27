@@ -22,6 +22,7 @@ public class IgniteApplicationTest {
     Parameters parameters;
     SourceService sourceService;
     IgniteApplication igniteApplication;
+    IgniteSourceService igniteSourceService;
 
     @Before
     public void setup() throws SQLException, ClassNotFoundException {
@@ -30,23 +31,23 @@ public class IgniteApplicationTest {
 
         parameters = Parameters.getInstance(args);
         sourceService = new SourceServiceExampleImpl();
-        igniteApplication = new IgniteApplication(parameters, sourceService);
     }
 
     @Test
     public void testApp() throws SQLException {
-        JDBConnection jdbConnection = new JDBConnection();
-
         try (Ignite ignite = Ignition.start()) {
-            jdbConnection.createTablesWithIndexes();
+            igniteApplication = new IgniteApplication(ignite, parameters);
+            igniteSourceService = new IgniteSourceServiseImpl(ignite, sourceService, parameters);
+            igniteSourceService.createCaches();
 
-            igniteApplication.setupCashes(ignite);
+            igniteApplication.setupCashes();
             IgniteCache subscriberCache = igniteApplication.getSubscriberCache();
             IgniteCache callCache = igniteApplication.getCallCache();
             IgniteCache carWashCache = igniteApplication.getCarWashCache();
             IgniteCache carWashUsersCache = igniteApplication.getCarWashUsersCache();
 
-            igniteApplication.insertData();
+            //igniteApplication.insertData();
+            igniteSourceService.insertIntoCaches();
 
             assertFalse("Subscriber table is empty",
                     subscriberCache.size(CachePeekMode.ALL) == 0);
@@ -89,13 +90,13 @@ public class IgniteApplicationTest {
         SqlFieldsQuery queryCall = new SqlFieldsQuery("INSERT INTO Call (" +
                 "id, subs_from, subs_to, dur, start_time) VALUES (?, ?, ?, ?, ?)");
 
-            //valid call
-            callCache.query(queryCall.setArgs(
-                    Call.INSTANCE_COUNT++,
-                    89202550011L,
-                    88002553534L,
-                    61,
-                    parameters.today.minusDays(1))).getAll();
+        //valid call
+        callCache.query(queryCall.setArgs(
+                Call.INSTANCE_COUNT++,
+                89202550011L,
+                88002553534L,
+                61,
+                parameters.today.minusDays(1))).getAll();
 
     }
 
