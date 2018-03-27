@@ -10,6 +10,8 @@ import rdbms.jdbc.JDBConnection;
 import system.Parameters;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class IgniteApplication {
@@ -51,6 +53,7 @@ public class IgniteApplication {
         setupCashes();
         sampleData();
         insertCarWashUser();
+        getCarWashUsers();
         printResult();
     }
 
@@ -92,7 +95,7 @@ public class IgniteApplication {
      * Main method for calculate CarWashUsers
      */
     void insertCarWashUser() throws SQLException {
-        List<CarWashUser> users = jdbc.getCarWashUsers(parameters);
+        List<CarWashUser> users = getCarWashUsers();
 
         SqlFieldsQuery queryInsert = new SqlFieldsQuery("INSERT INTO CARWASHUSER (" +
                 "subs_key, cunc_ind, name) VALUES (?, ?, ?)");
@@ -107,15 +110,41 @@ public class IgniteApplication {
         System.out.println(">>> Inserted entries into CarWashUser:" + carWashUsersCache.size(CachePeekMode.PRIMARY));
     }
 
+    private List<CarWashUser> getCarWashUsers() {
+        List<CarWashUser> users = new LinkedList<>();
+        SqlFieldsQuery query = new SqlFieldsQuery(
+                "SELECT DISTINCT s.subs_key, cw.cunc_ind, cwFriend.name" +
+                        " FROM SUBSCRIBER s JOIN CALL c ON s.subs_key = c.subs_from " +
+                        " JOIN CARWASH cw ON cw.subs_key = c.subs_to " +
+                        " LEFT JOIN (" +
+                        "      SELECT place, name" +
+                        "      FROM CARWASH " +
+                        "      WHERE cunc_ind = 1 " +
+                        "      LIMIT 1) cwFriend" +
+                        "   ON cwFriend.place = cw.place " +
+                        " WHERE c.dur >= 60 AND s.time_key < " +
+                        "'" + parameters.today.minusYears(1) + "'");
+
+        query.setDistributedJoins(true);
+
+        carWashUsersCache.query(query).getAll().forEach( (usr) -> {
+            ArrayList arr = (ArrayList) usr;
+            users.add(new CarWashUser((long) arr.get(0), (int) arr.get(1), arr.get(2).toString()));
+        });
+
+
+        return users;
+    }
+
     void printResult() {
         SqlFieldsQuery query = new SqlFieldsQuery("SELECT * " +
                 " FROM CARWASHUSER LIMIT 10");
 
-        FieldsQueryCursor cursorSubscriber = carWashUsersCache.query(query);
-
-        System.out.println("------------CARWASHUSERS:--------------");
-        cursorSubscriber.forEach(System.out::println);
-        System.out.println("---------------------------------------");
+        try (FieldsQueryCursor cursorSubscriber = carWashUsersCache.query(query)) {
+            System.out.println("------------CARWASHUSERS:--------------");
+            cursorSubscriber.forEach(System.out::println);
+            System.out.println("---------------------------------------");
+        }
     }
 
 

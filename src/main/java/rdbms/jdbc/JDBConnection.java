@@ -72,6 +72,5 @@ public class JDBConnection {
         }
 
         return list;
-
     }
 }
