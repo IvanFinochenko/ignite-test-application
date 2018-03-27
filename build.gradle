@@ -29,7 +29,7 @@ dependencies {
 }
 
 test {
-    environment "IGNITE_HOME", "/home/alex/Work/ignite/apache-ignite-2.4.0-src/"
+  //  environment "IGNITE_HOME", "/home/alex/Work/ignite/apache-ignite-2.4.0-src/"
 }
 
 mainClassName = 'App'

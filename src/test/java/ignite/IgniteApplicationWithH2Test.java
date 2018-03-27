@@ -15,6 +15,5 @@ public class IgniteApplicationWithH2Test extends IgniteApplicationTest {
 
         parameters = Parameters.getInstance(args);
         sourceService = new SourceServiceH2Impl();
-        igniteApplication = new IgniteApplication(parameters, sourceService);
     }
 }
