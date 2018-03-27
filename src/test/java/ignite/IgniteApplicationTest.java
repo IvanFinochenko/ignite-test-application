@@ -37,7 +37,7 @@ public class IgniteApplicationTest {
     public void testApp() throws SQLException {
         JDBConnection jdbConnection = new JDBConnection();
 
-        try (Ignite ignite = Ignition.start("examples/config/example-ignite.xml")) {
+        try (Ignite ignite = Ignition.start()) {
             jdbConnection.createTablesWithIndexes();
 
             igniteApplication.setupCashes(ignite);

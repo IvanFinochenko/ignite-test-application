@@ -50,7 +50,7 @@ public class IgniteApplication {
     public void start() throws SQLException {
         //Ignition.setClientMode(true);
 
-        try (Ignite ignite = Ignition.start("examples/config/example-ignite.xml")) {
+        try (Ignite ignite = Ignition.start()) {
             jdbc.createTablesWithIndexes();
 
             System.out.println();
