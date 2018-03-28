@@ -1,8 +1,12 @@
 package ignite;
 
 import entity.Call;
+import entity.CarWash;
+import entity.CarWashUser;
+import entity.Subscriber;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
+import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.cache.CachePeekMode;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -10,8 +14,8 @@ import rdbms.SourceService;
 import system.Parameters;
 
 public class IgniteSourceServiseImpl implements IgniteSourceService {
-    SourceService sourceService;
-    Parameters parameters;
+    private SourceService sourceService;
+    private Parameters parameters;
     private Ignite ignite;
 
 
@@ -23,10 +27,12 @@ public class IgniteSourceServiseImpl implements IgniteSourceService {
 
     @Override
     public void createCaches() {
-        CacheConfiguration<?, ?> cacheCfgSubscriber =
-                new CacheConfiguration<>("SUBSCRIBER").setSqlSchema("PUBLIC");
+        CacheConfiguration<Long, Subscriber> cacheCfgSubscriber = new CacheConfiguration<>();
+        cacheCfgSubscriber.setCacheMode(CacheMode.PARTITIONED)
+                .setName("SUBSCRIBER")
+                .setSqlSchema("PUBLIC");
 
-        try (IgniteCache<?, ?> cache = ignite.getOrCreateCache(cacheCfgSubscriber)) {
+        try (IgniteCache<Long, Subscriber> cache = ignite.getOrCreateCache(cacheCfgSubscriber)) {
             cache.query(new SqlFieldsQuery(
                     "CREATE TABLE IF NOT EXISTS Subscriber (" +
                             " subs_key LONG PRIMARY KEY," +
@@ -39,10 +45,12 @@ public class IgniteSourceServiseImpl implements IgniteSourceService {
                     "idx_subscriber_time_key ON Subscriber (time_key)")).getAll();
         }
 
-        CacheConfiguration<?, ?> cacheCfgCall =
-                new CacheConfiguration<>("CALL").setSqlSchema("PUBLIC");
+        CacheConfiguration<Long, Call> cacheCfgCall = new CacheConfiguration<>();
+        cacheCfgCall.setCacheMode(CacheMode.PARTITIONED)
+                .setName("CALL")
+                .setSqlSchema("PUBLIC");
 
-        try (IgniteCache<?, ?> cache = ignite.getOrCreateCache(cacheCfgCall)) {
+        try (IgniteCache<Long, Call> cache = ignite.getOrCreateCache(cacheCfgCall)) {
             cache.query(new SqlFieldsQuery(
                     "CREATE TABLE IF NOT EXISTS Call (" +
                             " id INT PRIMARY KEY," +
@@ -58,10 +66,12 @@ public class IgniteSourceServiseImpl implements IgniteSourceService {
             cache.query(new SqlFieldsQuery("CREATE INDEX IF NOT EXISTS idx_call_dur ON Call (dur)")).getAll();
         }
 
-        CacheConfiguration<?, ?> cacheCfgCarWash =
-                new CacheConfiguration<>("CARWASH").setSqlSchema("PUBLIC");
+        CacheConfiguration<Long, CarWash> cacheCfgCarWash = new CacheConfiguration<>();
+        cacheCfgCarWash.setCacheMode(CacheMode.PARTITIONED)
+                .setName("CARWASH")
+                .setSqlSchema("PUBLIC");
 
-        try (IgniteCache<?, ?> cache = ignite.getOrCreateCache(cacheCfgCarWash)) {
+        try (IgniteCache<Long, CarWash> cache = ignite.getOrCreateCache(cacheCfgCarWash)) {
             cache.query(new SqlFieldsQuery(
                     "CREATE TABLE IF NOT EXISTS CarWash (" +
                             " subs_key LONG PRIMARY KEY," +
@@ -71,10 +81,12 @@ public class IgniteSourceServiseImpl implements IgniteSourceService {
                             " WITH \"template=replicated, backups=1\"")).getAll();
         }
 
-        CacheConfiguration<?, ?> cacheCfgCarWashUser =
-                new CacheConfiguration<>("CARWASHUSER").setSqlSchema("PUBLIC");
+        CacheConfiguration<Long, CarWashUser> cacheCfgCarWashUser = new CacheConfiguration<>();
+        cacheCfgCarWashUser.setCacheMode(CacheMode.PARTITIONED)
+                .setName("CARWASHUSER")
+                .setSqlSchema("PUBLIC");
 
-        try (IgniteCache<?, ?> cache = ignite.getOrCreateCache(cacheCfgCarWashUser)) {
+        try (IgniteCache<Long, CarWashUser> cache = ignite.getOrCreateCache(cacheCfgCarWashUser)) {
             cache.query(new SqlFieldsQuery(
                     "CREATE TABLE IF NOT EXISTS CarWashUser (" +
                             " subs_key LONG PRIMARY KEY," +

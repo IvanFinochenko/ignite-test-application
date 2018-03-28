@@ -3,7 +3,6 @@ import ignite.IgniteSourceServiseImpl;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import rdbms.SourceService;
-import rdbms.SourceServiceExampleImpl;
 import rdbms.SourceServiceH2Impl;
 import system.Parameters;
 
