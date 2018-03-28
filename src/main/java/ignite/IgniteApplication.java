@@ -6,7 +6,6 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CachePeekMode;
 import org.apache.ignite.cache.query.FieldsQueryCursor;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
-import rdbms.jdbc.JDBConnection;
 import system.Parameters;
 
 import java.sql.SQLException;
@@ -16,7 +15,6 @@ import java.util.List;
 
 public class IgniteApplication {
     private Parameters parameters;
-    private JDBConnection jdbc;
     private Ignite ignite;
 
     private IgniteCache subscriberCache;
@@ -26,7 +24,6 @@ public class IgniteApplication {
 
     public IgniteApplication(Ignite ignite, Parameters parameters) throws SQLException {
         this.parameters = parameters;
-        jdbc = new JDBConnection();
         this.ignite = ignite;
     }
 
@@ -127,7 +124,7 @@ public class IgniteApplication {
 
         query.setDistributedJoins(true);
 
-        carWashUsersCache.query(query).getAll().forEach( (usr) -> {
+        carWashUsersCache.query(query).getAll().forEach((usr) -> {
             ArrayList arr = (ArrayList) usr;
             users.add(new CarWashUser((long) arr.get(0), (int) arr.get(1), arr.get(2).toString()));
         });

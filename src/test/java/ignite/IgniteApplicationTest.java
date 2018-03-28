@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 import rdbms.SourceService;
 import rdbms.SourceServiceExampleImpl;
-import rdbms.jdbc.JDBConnection;
 import system.Parameters;
 
 import java.sql.SQLException;
