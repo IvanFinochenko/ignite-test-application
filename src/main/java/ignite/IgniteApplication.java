@@ -1,11 +1,15 @@
 package ignite;
 
+import entity.Call;
+import entity.CarWash;
 import entity.CarWashUser;
+import entity.Subscriber;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CachePeekMode;
 import org.apache.ignite.cache.query.FieldsQueryCursor;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
+import org.apache.ignite.cache.query.SqlQuery;
 import system.Parameters;
 
 import java.sql.SQLException;
@@ -56,36 +60,29 @@ public class IgniteApplication {
 
     void setupCashes() {
         // Getting a reference to Subscriber, Call, CarWash and CarWashUsers caches created by IgniteSourceService
-        subscriberCache = ignite.cache("SQL_PUBLIC_SUBSCRIBER");
-        callCache = ignite.cache("SQL_PUBLIC_CALL");
-        carWashCache = ignite.cache("SQL_PUBLIC_CARWASH");
-        carWashUsersCache = ignite.cache("SQL_PUBLIC_CARWASHUSER");
+        subscriberCache = ignite.cache("SUBSCRIBER");
+        callCache = ignite.cache("CALL");
+        carWashCache = ignite.cache("CARWASH");
+        carWashUsersCache = ignite.cache("CARWASHUSER");
     }
 
     void sampleData() {
-        SqlFieldsQuery querySubscriber = new SqlFieldsQuery("SELECT * " +
-                " FROM SUBSCRIBER LIMIT 10");
+        String sql = "from Subscriber";
+        List listSubscriber = subscriberCache.query(new SqlQuery<Long, Subscriber>(Subscriber.class, sql)).getAll();
+        System.out.println(">>> SUBSCRIBERS:");
+        listSubscriber.forEach(System.out::println);
 
-        FieldsQueryCursor cursorSubscriber = subscriberCache.query(querySubscriber);
 
-        System.out.println("SUBSCRIBER:");
-        cursorSubscriber.forEach(System.out::println);
+        sql = "from Call";
+        List listCalls = callCache.query(new SqlQuery<Long, Call>(Call.class, sql)).getAll();
+        System.out.println(">>> CALLS:");
+        listCalls.forEach(System.out::println);
 
-        SqlFieldsQuery queryCall = new SqlFieldsQuery("SELECT * " +
-                " FROM CALL LIMIT 10");
 
-        FieldsQueryCursor cursorCall = callCache.query(queryCall);
-
-        System.out.println("CALL:");
-        cursorCall.forEach(System.out::println);
-
-        SqlFieldsQuery queryCarWash = new SqlFieldsQuery("SELECT * " +
-                " FROM CARWASH LIMIT 10");
-
-        FieldsQueryCursor cursorCarWash = carWashCache.query(queryCarWash);
-
-        System.out.println("CARWASH:");
-        cursorCarWash.forEach(System.out::println);
+        sql = "from CarWash";
+        List listCarWashes = carWashCache.query(new SqlQuery<Long, CarWash>(CarWash.class, sql)).getAll();
+        System.out.println(">>> CarWashes:");
+        listCarWashes.forEach(System.out::println);
     }
 
     /**
@@ -94,15 +91,7 @@ public class IgniteApplication {
     void insertCarWashUser() throws SQLException {
         List<CarWashUser> users = getCarWashUsers();
 
-        SqlFieldsQuery queryInsert = new SqlFieldsQuery("INSERT INTO CARWASHUSER (" +
-                "subs_key, cunc_ind, name) VALUES (?, ?, ?)");
-
-        users.forEach((usr) -> {
-                    System.out.println("Inserting: " + usr);
-                    carWashUsersCache.query(queryInsert.setArgs(
-                            usr.getSubsKey(), usr.getConcInd(), usr.getName())).getAll();
-                }
-        );
+        users.forEach((s) -> carWashUsersCache.put(s.getSubsKey(), s));
 
         System.out.println(">>> Inserted entries into CarWashUser:" + carWashUsersCache.size(CachePeekMode.PRIMARY));
     }
@@ -110,16 +99,16 @@ public class IgniteApplication {
     private List<CarWashUser> getCarWashUsers() {
         List<CarWashUser> users = new LinkedList<>();
         SqlFieldsQuery query = new SqlFieldsQuery(
-                "SELECT DISTINCT s.subs_key, cw.cunc_ind, cwFriend.name" +
-                        " FROM SUBSCRIBER s JOIN CALL c ON s.subs_key = c.subs_from " +
-                        " JOIN CARWASH cw ON cw.subs_key = c.subs_to " +
+                "SELECT DISTINCT s.subsKey, cw.cuncInd, cwFriend.name" +
+                        " FROM SUBSCRIBER s JOIN CALL c ON s.subsKey = c.subsFrom " +
+                        " JOIN CARWASH cw ON cw.subsKey = c.subsTo " +
                         " LEFT JOIN (" +
                         "      SELECT place, name" +
                         "      FROM CARWASH " +
-                        "      WHERE cunc_ind = 1 " +
+                        "      WHERE cuncInd = 1 " +
                         "      LIMIT 1) cwFriend" +
                         "   ON cwFriend.place = cw.place " +
-                        " WHERE c.dur >= 60 AND s.time_key < " +
+                        " WHERE c.dur >= 60 AND s.timeKey < " +
                         "'" + parameters.today.minusYears(1) + "'");
 
         query.setDistributedJoins(true);

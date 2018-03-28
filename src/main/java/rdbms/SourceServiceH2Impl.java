@@ -103,7 +103,7 @@ public class SourceServiceH2Impl implements SourceService {
         String sql = "INSERT INTO Call VALUES (?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, Call.INSTANCE_COUNT++);
+            pstmt.setLong(1, call.id);
             pstmt.setLong(2, call.getSubsFrom());
             pstmt.setLong(3, call.getSubsTo());
             pstmt.setLong(4, call.getDur());

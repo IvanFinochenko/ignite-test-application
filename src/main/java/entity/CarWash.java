@@ -21,12 +21,14 @@ public class CarWash {
     /**
      * The place where carwash is located.
      */
+    @QuerySqlField
     private String place;
 
     /**
      * Concurrent index(1-enemy, 0-friend).
      */
-    private int concInd;
+    @QuerySqlField
+    private int cuncInd;
 
     /**
      * Constructs a  instance.
@@ -38,12 +40,12 @@ public class CarWash {
      */
     public CarWash(long subsKey, String name, String place, int concInd) {
         if (concInd != 0 && concInd != 1)
-            throw new IllegalArgumentException("concInd should be 0 or 1, given: " + concInd);
+            throw new IllegalArgumentException("cuncInd should be 0 or 1, given: " + concInd);
 
         this.subsKey = subsKey;
         this.name = name;
         this.place = place;
-        this.concInd = concInd;
+        this.cuncInd = concInd;
     }
 
     /**
@@ -79,7 +81,7 @@ public class CarWash {
      * @return Carwash concurrent index.
      */
     public int getConcInd() {
-        return concInd;
+        return cuncInd;
     }
 
     /**
@@ -90,6 +92,6 @@ public class CarWash {
         return "Carwash [subsKey=" + subsKey +
                 ", name=" + name +
                 ", place=" + place +
-                ", concInd=" + concInd + ']';
+                ", concInd=" + cuncInd + ']';
     }
 }

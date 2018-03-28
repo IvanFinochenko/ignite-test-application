@@ -5,7 +5,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.cache.CachePeekMode;
-import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.junit.Before;
 import org.junit.Test;
 import rdbms.SourceService;
@@ -13,6 +12,7 @@ import rdbms.SourceServiceExampleImpl;
 import system.Parameters;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,8 +36,8 @@ public class IgniteApplicationTest {
     public void testApp() throws SQLException {
         try (Ignite ignite = Ignition.start()) {
             igniteApplication = new IgniteApplication(ignite, parameters);
-            igniteSourceService = new IgniteSourceServiseImpl(ignite, sourceService, parameters);
-            igniteSourceService.createCaches();
+            igniteSourceService = new IgniteSourceServiceImpl(ignite, sourceService, parameters);
+            igniteSourceService.createCachesAndInsert();
 
             igniteApplication.setupCashes();
             IgniteCache subscriberCache = igniteApplication.getSubscriberCache();
@@ -46,7 +46,6 @@ public class IgniteApplicationTest {
             IgniteCache carWashUsersCache = igniteApplication.getCarWashUsersCache();
 
             //igniteApplication.insertData();
-            igniteSourceService.insertIntoCaches();
 
             assertFalse("Subscriber table is empty",
                     subscriberCache.size(CachePeekMode.ALL) == 0);
@@ -86,46 +85,25 @@ public class IgniteApplicationTest {
     }
 
     private void addValidValueToCallsTable(IgniteCache callCache) {
-        SqlFieldsQuery queryCall = new SqlFieldsQuery("INSERT INTO Call (" +
-                "id, subs_from, subs_to, dur, start_time) VALUES (?, ?, ?, ?, ?)");
-
         //valid call
-        callCache.query(queryCall.setArgs(
-                Call.INSTANCE_COUNT++,
-                89202550011L,
-                88002553534L,
-                61,
-                parameters.today.minusDays(1))).getAll();
-
+        Call call = new Call(89202550011L, 88002553534L, 61, LocalDateTime.now().minusDays(5));
+        callCache.put(call.id, call);
     }
 
     private void addNotValidValuesToCallsTable(IgniteCache callCache) {
-        SqlFieldsQuery queryCall = new SqlFieldsQuery("INSERT INTO Call (" +
-                "id, subs_from, subs_to, dur, start_time) VALUES (?, ?, ?, ?, ?)");
-
+        LocalDateTime dt = LocalDateTime.now().minusDays(5);
         //dur < 60
-        callCache.query(queryCall.setArgs(
-                Call.INSTANCE_COUNT++,
-                89202550011L,
-                88002553534L,
-                59,
-                parameters.today.minusDays(1))).getAll();
+        Call call1 = new Call(89202550011L, 88002553534L, 59, LocalDateTime.now().minusDays(5));
 
         //subs_to is wrong
-        callCache.query(queryCall.setArgs(
-                Call.INSTANCE_COUNT++,
-                89202550011L,
-                80000000000L,
-                70,
-                parameters.today.minusDays(1))).getAll();
+        Call call2 = new Call(89202550011L, 80000000000L, 70, LocalDateTime.now().minusDays(5));
 
         //future time
-        callCache.query(queryCall.setArgs(
-                Call.INSTANCE_COUNT++,
-                89202550011L,
-                80000000000L,
-                59,
-                parameters.today.plusDays(1))).getAll();
+        Call call3 = new Call(89202550011L, 80000000000L, 59, LocalDateTime.now().minusDays(5));
+
+        callCache.put(call1.id, call1);
+        callCache.put(call2.id, call2);
+        callCache.put(call2.id, call2);
 
     }
 }
