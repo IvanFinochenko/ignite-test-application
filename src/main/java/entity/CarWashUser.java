@@ -15,6 +15,7 @@ public class CarWashUser {
     /**
      * Concurrent index(1-enemy, 0-friend).
      */
+    @QuerySqlField
     private int concInd;
 
     /**

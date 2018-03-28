@@ -1,5 +1,5 @@
 import ignite.IgniteApplication;
-import ignite.IgniteSourceServiseImpl;
+import ignite.IgniteSourceServiceImpl;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import rdbms.SourceService;
@@ -15,11 +15,10 @@ public class App {
         SourceService sourceService = new SourceServiceH2Impl();
 
         try (Ignite ignite = Ignition.start()) {
-            IgniteSourceServiseImpl igniteSourceServise =
-                    new IgniteSourceServiseImpl(ignite, sourceService, parameters);
+            IgniteSourceServiceImpl igniteSourceService =
+                    new IgniteSourceServiceImpl(ignite, sourceService, parameters);
 
-            igniteSourceServise.createCaches();
-            igniteSourceServise.insertIntoCaches();
+            igniteSourceService.createCachesAndInsert();
             new IgniteApplication(ignite, parameters).start();
         }
     }

@@ -1,17 +1,27 @@
 package entity;
 
+import org.apache.ignite.cache.affinity.AffinityKey;
 import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
+import javax.xml.validation.SchemaFactoryConfigurationError;
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Represents an action of calling
  */
-public class Call {
+public class Call implements Serializable {
     /**
      * Count do primary key in table
      */
-    public static int INSTANCE_COUNT;
+    private static final AtomicLong ID_GEN = new AtomicLong();
+
+    /**
+     * Call id
+     */
+    @QuerySqlField(index = true)
+    public Long id;
 
     /**
      * Who called.
@@ -22,11 +32,13 @@ public class Call {
     /**
      * Whom was called.
      */
+    @QuerySqlField(index = true)
     private long subsTo;
 
     /**
      * Duration of action in sec.
      */
+    @QuerySqlField
     private int dur;
 
     /**
@@ -34,6 +46,8 @@ public class Call {
      */
     @QuerySqlField(index = true)
     private LocalDateTime startTime;
+
+   // private transient AffinityKey<Long> key;
 
     /**
      * Constructs a  instance.
@@ -44,6 +58,8 @@ public class Call {
      * @param startTime Call start time.
      */
     public Call(long subsFrom, long subsTo, int dur, LocalDateTime startTime) {
+        this.id = ID_GEN.incrementAndGet();
+
         this.subsFrom = subsFrom;
         this.subsTo = subsTo;
         this.dur = dur;

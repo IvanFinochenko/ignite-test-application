@@ -17,11 +17,13 @@ public class Subscriber {
     /**
      * Subscriber name (can be first + middle + last).
      */
+    @QuerySqlField
     private String name;
 
     /**
      * The place where subscriber was registered.
      */
+    @QuerySqlField
     private String place;
 
     /**
