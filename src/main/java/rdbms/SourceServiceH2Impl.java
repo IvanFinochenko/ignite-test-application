@@ -3,6 +3,8 @@ package rdbms;
 import entity.Call;
 import entity.CarWash;
 import entity.Subscriber;
+import org.apache.ignite.internal.sql.SqlParseException;
+import utils.SqlScripts;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -17,156 +19,18 @@ public class SourceServiceH2Impl implements SourceService {
         Class.forName("org.h2.Driver");
         conn = DriverManager.getConnection("jdbc:h2:~/test", "sa", "");
 
-        dropTables();
-        createTables();
-        insertData();
+        InitializerH2 initializerH2 = new InitializerH2(conn);
+        initializerH2.init();
     }
-
-    private void insertData() {
-        SourceService sourceService = new SourceServiceExampleImpl();
-
-        sourceService.getSubscribers().forEach(subs -> {
-            try {
-                insertSubscriber(subs);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
-
-        sourceService.getCalls(LocalDateTime.now().minusYears(2), LocalDateTime.now()).forEach(call -> {
-            try {
-                insertCall(call);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
-
-        sourceService.getCarWashes().forEach((carWash -> {
-            try {
-                insertCarWash(carWash);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }));
-    }
-
-    private void createTables() {
-        try (Statement stmt = conn.createStatement()) {
-
-            String sqlSubscriber = "CREATE TABLE IF NOT EXISTS Subscriber (" +
-                    " subs_key LONG PRIMARY KEY," +
-                    " place VARCHAR," +
-                    " name VARCHAR," +
-                    " time_key DATE) ";
-            stmt.executeUpdate(sqlSubscriber);
-
-            String sqlCall = "CREATE TABLE IF NOT EXISTS Call (" +
-                    " id INT PRIMARY KEY," +
-                    " subs_from LONG," +
-                    " subs_to LONG," +
-                    " dur INT," +
-                    " start_time VARCHAR) ";
-            stmt.executeUpdate(sqlCall);
-
-            String sqlCarWash = "CREATE TABLE IF NOT EXISTS CarWash (" +
-                    " subs_key LONG PRIMARY KEY," +
-                    " name VARCHAR," +
-                    " place VARCHAR," +
-                    " cunc_ind INT) ";
-            stmt.executeUpdate(sqlCarWash);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void insertSubscriber(Subscriber subs) throws SQLException {
-        String sql = "INSERT INTO Subscriber VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, subs.getSubsKey());
-            pstmt.setString(2, subs.getName());
-            pstmt.setString(3, subs.getPlace());
-            pstmt.setDate(4, Date.valueOf(subs.getTimeKey()));
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            if (e.getMessage().contains("Unique index or primary key violation")) {
-                System.out.println(">>> Insert into Subscriber was rejected " +
-                        "because it has already contained such primary key");
-            } else {
-                throw new SQLException(e);
-            }
-        }
-    }
-
-    private void insertCall(Call call) throws SQLException {
-        String sql = "INSERT INTO Call VALUES (?, ?, ?, ?, ?)";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, call.id);
-            pstmt.setLong(2, call.getSubsFrom());
-            pstmt.setLong(3, call.getSubsTo());
-            pstmt.setLong(4, call.getDur());
-            pstmt.setString(5, call.getStartTime().toString());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            if (e.getMessage().contains("Unique index or primary key violation")) {
-                System.out.println(">>> Insert into Call was rejected " +
-                        "because it has already contained such primary key");
-            } else {
-                throw new SQLException(e);
-            }
-        }
-    }
-
-    private void insertCarWash(CarWash cw) throws SQLException {
-        String sql = "INSERT INTO CarWash VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, cw.getSubsKey());
-            pstmt.setString(2, cw.getName());
-            pstmt.setString(3, cw.getPlace());
-            pstmt.setInt(4, cw.getConcInd());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            if (e.getMessage().contains("Unique index or primary key violation")) {
-                System.out.println(">>> Insert into Subscriber was rejected " +
-                        "because it has already contained such primary key");
-            } else {
-                throw new SQLException(e);
-            }
-        }
-    }
-
-    private void dropTables() {
-        try (Statement stmt = conn.createStatement()) {
-
-            String sqlSubscriber = "DROP TABLE IF EXISTS Subscriber";
-            stmt.executeUpdate(sqlSubscriber);
-
-            String sqlCall = "DROP TABLE IF EXISTS Call ";
-            stmt.executeUpdate(sqlCall);
-
-            String sqlCarWash = "DROP TABLE IF EXISTS CarWash";
-            stmt.executeUpdate(sqlCarWash);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-
+    
     @Override
     public List<Call> getCalls(LocalDateTime dateFrom, LocalDateTime dateUpTo) {
         List<Call> calls = new LinkedList<>();
 
-        try (Statement stmt = conn.createStatement()) {
-            String sql = "SELECT subs_from, subs_to, dur, start_time " +
-                    "FROM Call " +
-                    "WHERE start_time > \'" + dateFrom + "\'"+
-                    "  AND start_time < \'" + dateUpTo + "\'";
-
-            ResultSet rs = stmt.executeQuery(sql);
+        try (PreparedStatement pstmt = conn.prepareStatement(SqlScripts.getSql("select_call"))) {
+            pstmt.setString(1, dateFrom.toString());
+            pstmt.setString(2, dateUpTo.toString());
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 // Retrieve by column name
@@ -189,8 +53,7 @@ public class SourceServiceH2Impl implements SourceService {
         List<Subscriber> subs = new LinkedList<>();
 
         try (Statement stmt = conn.createStatement()) {
-            String sql = "SELECT subs_key, place, name, time_key FROM Subscriber";
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery(SqlScripts.getSql("select_subscriber"));
 
             while (rs.next()) {
                 // Retrieve by column name
@@ -213,8 +76,7 @@ public class SourceServiceH2Impl implements SourceService {
         List<CarWash> washes = new LinkedList<>();
 
         try (Statement stmt = conn.createStatement()) {
-            String sql = "SELECT subs_key, place, name, cunc_ind FROM CarWash";
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery(SqlScripts.getSql("select_carwash"));
 
             while (rs.next()) {
                 // Retrieve by column name

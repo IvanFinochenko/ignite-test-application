@@ -2,6 +2,7 @@ package entity;
 
 import org.apache.ignite.cache.query.annotations.QuerySqlField;
 
+import java.sql.Date;
 import java.time.LocalDate;
 
 /**
