@@ -26,7 +26,7 @@ public class IgniteApplicationTest {
     @Before
     public void setup() throws SQLException, ClassNotFoundException {
         String[] args = new String[1];
-        args[0] = "2018-03-25";
+        args[0] = "2018-04-12";
 
         parameters = Parameters.getInstance(args);
         sourceService = new SourceServiceExampleImpl();

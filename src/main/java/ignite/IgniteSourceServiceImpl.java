@@ -11,6 +11,10 @@ import org.apache.ignite.configuration.CacheConfiguration;
 import rdbms.SourceService;
 import system.Parameters;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 public class IgniteSourceServiceImpl implements IgniteSourceService {
     private SourceService sourceService;
     private Parameters parameters;
@@ -23,59 +27,34 @@ public class IgniteSourceServiceImpl implements IgniteSourceService {
         this.parameters = parameters;
     }
 
+    private <K, T> void createCache(Class valueClass, Map<K, T> data) {
+        CacheConfiguration<K, T> cacheCfg = new CacheConfiguration<>();
+        cacheCfg.setCacheMode(CacheMode.PARTITIONED)
+                .setName(valueClass.getSimpleName().toUpperCase())
+                .setIndexedTypes(Long.class, valueClass)
+                .setSqlSchema("PUBLIC");
+
+        try (IgniteCache<K, T> cache = ignite.getOrCreateCache(cacheCfg)) {
+            cache.clear();
+            cache.putAll(data);
+        }
+    }
+
     @Override
     public void createCachesAndInsert() {
-        CacheConfiguration<Long, Subscriber> cacheCfgSubscriber = new CacheConfiguration<>();
-        cacheCfgSubscriber.setCacheMode(CacheMode.PARTITIONED)
-                .setName("SUBSCRIBER")
-                .setIndexedTypes(Long.class, Subscriber.class)
-                .setSqlSchema("PUBLIC");
+        Map<Long, Subscriber> subscribers = sourceService.getSubscribers().stream()
+                .collect(Collectors.toMap(Subscriber::getSubsKey, subscriber -> subscriber));
+        createCache(Subscriber.class, subscribers);
 
-        try (IgniteCache<Long, Subscriber> cache = ignite.getOrCreateCache(cacheCfgSubscriber)) {
-            cache.clear();
+        Map<Long, Call> calls =  sourceService
+                .getCalls(parameters.today.atStartOfDay().minusWeeks(2), parameters.today.atStartOfDay())
+                .stream().collect(Collectors.toMap(call -> call.id, call -> call));
+        createCache(Call.class, calls);
 
-            sourceService.getSubscribers().forEach((s) ->
-                    cache.put(s.getSubsKey(), s)
-            );
-        }
+        Map<Long, CarWash> carWashes = sourceService.getCarWashes().stream()
+                .collect(Collectors.toMap(CarWash::getSubsKey, carWash -> carWash));
+        createCache(CarWash.class, carWashes);
 
-        CacheConfiguration<Long, Call> cacheCfgCall = new CacheConfiguration<>();
-        cacheCfgCall.setCacheMode(CacheMode.PARTITIONED)
-                .setName("CALL")
-                .setIndexedTypes(Long.class, Call.class)
-                .setSqlSchema("PUBLIC");
-
-        try (IgniteCache<Long, Call> cache = ignite.getOrCreateCache(cacheCfgCall)) {
-            cache.clear();
-
-            sourceService.getCalls(parameters.today.atStartOfDay().minusWeeks(2),
-                    parameters.today.atStartOfDay()).forEach((s) ->
-                    cache.put(s.id, s)
-            );
-        }
-
-        CacheConfiguration<Long, CarWash> cacheCfgCarWash = new CacheConfiguration<>();
-        cacheCfgCarWash.setCacheMode(CacheMode.PARTITIONED)
-                .setName("CARWASH")
-                .setIndexedTypes(Long.class, CarWash.class)
-                .setSqlSchema("PUBLIC");
-
-        try (IgniteCache<Long, CarWash> cache = ignite.getOrCreateCache(cacheCfgCarWash)) {
-            cache.clear();
-
-            sourceService.getCarWashes().forEach((s) ->
-                    cache.put(s.getSubsKey(), s)
-            );
-        }
-
-        CacheConfiguration<Long, CarWashUser> cacheCfgCarWashUser = new CacheConfiguration<>();
-        cacheCfgCarWashUser.setCacheMode(CacheMode.PARTITIONED)
-                .setName("CARWASHUSER")
-                .setIndexedTypes(Long.class, CarWashUser.class)
-                .setSqlSchema("PUBLIC");
-
-        try (IgniteCache<Long, CarWashUser> cache = ignite.getOrCreateCache(cacheCfgCarWashUser)) {
-            // NOP
-        }
+        createCache(CarWashUser.class, Collections.<Long, CarWashUser>emptyMap());
     }
 }

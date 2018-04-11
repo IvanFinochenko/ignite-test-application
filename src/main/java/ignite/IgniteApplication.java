@@ -7,24 +7,25 @@ import entity.Subscriber;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CachePeekMode;
-import org.apache.ignite.cache.query.FieldsQueryCursor;
-import org.apache.ignite.cache.query.SqlFieldsQuery;
-import org.apache.ignite.cache.query.SqlQuery;
+import org.apache.ignite.cache.query.*;
 import system.Parameters;
 
+import javax.cache.Cache;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class IgniteApplication {
     private Parameters parameters;
     private Ignite ignite;
 
-    private IgniteCache subscriberCache;
-    private IgniteCache callCache;
-    private IgniteCache carWashCache;
-    private IgniteCache carWashUsersCache;
+    private IgniteCache<Long, Subscriber> subscriberCache;
+    private IgniteCache<Long, Call> callCache;
+    private IgniteCache<Long, CarWash> carWashCache;
+    private IgniteCache<Long, CarWashUser> carWashUsersCache;
 
     public IgniteApplication(Ignite ignite, Parameters parameters) throws SQLException {
         this.parameters = parameters;
@@ -66,23 +67,18 @@ public class IgniteApplication {
         carWashUsersCache = ignite.cache("CARWASHUSER");
     }
 
-    void sampleData() {
-        String sql = "from Subscriber";
-        List listSubscriber = subscriberCache.query(new SqlQuery<Long, Subscriber>(Subscriber.class, sql)).getAll();
+    private <V> void printCache(IgniteCache<Long, V> cache) {
+        List<Cache.Entry<Long, V>> entries = cache.query(new ScanQuery<Long, V>()).getAll();
+        entries.forEach(System.out::println);
+    }
+
+    private void sampleData() {
         System.out.println(">>> SUBSCRIBERS:");
-        listSubscriber.forEach(System.out::println);
-
-
-        sql = "from Call";
-        List listCalls = callCache.query(new SqlQuery<Long, Call>(Call.class, sql)).getAll();
+        printCache(subscriberCache);
         System.out.println(">>> CALLS:");
-        listCalls.forEach(System.out::println);
-
-
-        sql = "from CarWash";
-        List listCarWashes = carWashCache.query(new SqlQuery<Long, CarWash>(CarWash.class, sql)).getAll();
+        printCache(callCache);
         System.out.println(">>> CarWashes:");
-        listCarWashes.forEach(System.out::println);
+        printCache(carWashCache);
     }
 
     /**
@@ -122,11 +118,11 @@ public class IgniteApplication {
         return users;
     }
 
-    void printResult() {
+    private void printResult() {
         SqlFieldsQuery query = new SqlFieldsQuery("SELECT * " +
                 " FROM CARWASHUSER LIMIT 10");
 
-        try (FieldsQueryCursor cursorSubscriber = carWashUsersCache.query(query)) {
+        try (FieldsQueryCursor<List<?>> cursorSubscriber = carWashUsersCache.query(query)) {
             System.out.println("------------CARWASHUSERS:--------------");
             cursorSubscriber.forEach(System.out::println);
             System.out.println("---------------------------------------");
