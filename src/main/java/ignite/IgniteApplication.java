@@ -9,6 +9,7 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CachePeekMode;
 import org.apache.ignite.cache.query.*;
 import system.Parameters;
+import utils.SqlScripts;
 
 import javax.cache.Cache;
 import java.sql.SQLException;
@@ -94,18 +95,8 @@ public class IgniteApplication {
 
     private List<CarWashUser> getCarWashUsers() {
         List<CarWashUser> users = new LinkedList<>();
-        SqlFieldsQuery query = new SqlFieldsQuery(
-                "SELECT DISTINCT s.subsKey, cw.cuncInd, cwFriend.name" +
-                        " FROM SUBSCRIBER s JOIN CALL c ON s.subsKey = c.subsFrom " +
-                        " JOIN CARWASH cw ON cw.subsKey = c.subsTo " +
-                        " LEFT JOIN (" +
-                        "      SELECT place, name" +
-                        "      FROM CARWASH " +
-                        "      WHERE cuncInd = 1 " +
-                        "      LIMIT 1) cwFriend" +
-                        "   ON cwFriend.place = cw.place " +
-                        " WHERE c.dur >= 60 AND s.timeKey < " +
-                        "'" + parameters.today.minusYears(1) + "'");
+        SqlFieldsQuery query = new SqlFieldsQuery(SqlScripts.getSql("carwash_user"))
+                .setArgs(parameters.today.minusYears(1));
 
         query.setDistributedJoins(true);
 
