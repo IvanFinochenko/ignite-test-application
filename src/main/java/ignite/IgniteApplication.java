@@ -16,8 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class IgniteApplication {
     private Parameters parameters;
@@ -33,19 +32,19 @@ public class IgniteApplication {
         this.ignite = ignite;
     }
 
-    IgniteCache getSubscriberCache() {
+    IgniteCache<Long, Subscriber> getSubscriberCache() {
         return subscriberCache;
     }
 
-    IgniteCache getCallCache() {
+    IgniteCache<Long, Call> getCallCache() {
         return callCache;
     }
 
-    IgniteCache getCarWashCache() {
+    IgniteCache<Long, CarWash> getCarWashCache() {
         return carWashCache;
     }
 
-    IgniteCache getCarWashUsersCache() {
+    IgniteCache<Long, CarWashUser> getCarWashUsersCache() {
         return carWashUsersCache;
     }
 
@@ -55,8 +54,8 @@ public class IgniteApplication {
 
         setupCashes();
         sampleData();
-        insertCarWashUser();
-        getCarWashUsers();
+//        insertCarWashUser();
+        computeCarWashUsers();
         printResult();
     }
 
@@ -107,6 +106,32 @@ public class IgniteApplication {
 
 
         return users;
+    }
+
+    public void computeCarWashUsers() {
+        carWashUsersCache.clear();
+        ignite.compute().run(() -> {
+            CarWash cwFriend = carWashCache.query(new SqlQuery<Long, CarWash>(CarWash.class, "cuncInd = 1 LIMIT 1"))
+                .getAll().get(0).getValue();
+
+            AtomicReference<Subscriber> sub = new AtomicReference<>();
+            AtomicReference<CarWash> carWash = new AtomicReference<>();
+
+            callCache.query(new ScanQuery<Long, Call>()).forEach(callEntry -> {
+                if (subscriberCache.containsKey(callEntry.getValue().getSubsFrom())
+                        && carWashCache.containsKey(callEntry.getValue().getSubsTo())) {
+                    sub.set(subscriberCache.get(callEntry.getValue().getSubsFrom()));
+                    carWash.set(carWashCache.get(callEntry.getValue().getSubsTo()));
+                    if (carWash.get().getPlace().equals(cwFriend.getPlace())
+                            && callEntry.getValue().getDur() >= 60
+                            && sub.get().getTimeKey().compareTo(parameters.today.minusYears(1)) < 0) {
+                        carWashUsersCache.put(
+                                sub.get().getSubsKey(),
+                                new CarWashUser(sub.get().getSubsKey(), carWash.get().getConcInd(), cwFriend.getName()));
+                    }
+                }
+            });
+        });
     }
 
     private void printResult() {

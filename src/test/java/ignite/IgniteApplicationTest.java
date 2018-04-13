@@ -1,19 +1,28 @@
 package ignite;
 
 import entity.Call;
+import entity.CarWash;
+import entity.CarWashUser;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.cache.CachePeekMode;
+import org.apache.ignite.cache.query.ScanQuery;
 import org.junit.Before;
 import org.junit.Test;
 import rdbms.SourceService;
 import rdbms.SourceServiceExampleImpl;
 import system.Parameters;
 
+import javax.cache.Cache;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -28,7 +37,7 @@ public class IgniteApplicationTest {
         String[] args = new String[1];
         args[0] = "2018-04-12";
 
-        parameters = Parameters.getInstance(args);
+        parameters = Parameters.getInstance(new String[0]);
         sourceService = new SourceServiceExampleImpl();
     }
 
@@ -105,5 +114,30 @@ public class IgniteApplicationTest {
         callCache.put(call2.id, call2);
         callCache.put(call2.id, call2);
 
+    }
+
+    private List<String> getCacheCarWashUsers(IgniteApplication igniteApplication) {
+        return igniteApplication.getCarWashUsersCache()
+                .query(new ScanQuery<Long, CarWashUser>()).getAll()
+                .stream().map(entry -> entry.getValue().toString()).collect(Collectors.toList());
+    }
+
+    @Test
+    public void testCarWashUsers() throws SQLException{
+        try (Ignite ignite = Ignition.start()) {
+            igniteApplication = new IgniteApplication(ignite, parameters);
+            igniteSourceService = new IgniteSourceServiceImpl(ignite, sourceService, parameters);
+            igniteSourceService.createCachesAndInsert();
+
+            igniteApplication.setupCashes();
+
+            igniteApplication.insertCarWashUser();
+            List<String> sqlResult = getCacheCarWashUsers(igniteApplication);
+            igniteApplication.computeCarWashUsers();
+            List<String> computeResult = getCacheCarWashUsers(igniteApplication);
+
+            assert(sqlResult.equals(computeResult));
+
+        }
     }
 }
